@@ -40,7 +40,7 @@ services:
         image: wangqiru/ttrss:latest
         container_name: ttrss
         ports:
-            - 1300:1300
+            - 1300:80
         environment:
             - SELF_URL_PATH=http://1.116.185.177:1300/ # please change to your own domain
             - DB_HOST=database.postgres
