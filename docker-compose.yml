@@ -33,50 +33,45 @@ services:
             - 181:80
         environment:
             - SELF_URL_PATH=http://1.116.185.177:181/ # please change to your own domain
-            - DB_PASS=0.161307240sama # use the same password defined in `database.postgres`
-            - PUID=1000
-            - PGID=1000
+            - DB_HOST=database.postgres
+            - DB_PORT=5432
+            - DB_NAME=ttrss
+            - DB_USER=postgres
+            - DB_PASS=0.161307240sama # please change the password
+            - FETCH_TIMEOUT=15 #optional
         volumes:
             - feed-icons:/var/www/feed-icons/
-        networks:
-            - public_access
-            - service_only
-            - database_only
         stdin_open: true
         tty: true
         restart: always
+        command: sh -c 'sh /wait-for database.postgres:5432 -- php /configure-db.php && exec s6-svscan /etc/s6/'
     service.mercury: # set Mercury Parser API endpoint to `service.mercury:3000` on TTRSS plugin setting page
         image: wangqiru/mercury-parser-api:latest
         container_name: mercury
-        networks:
-            - public_access
-            - service_only
+        expose:
+             - 3000
         restart: always
     service.opencc: # set OpenCC API endpoint to `service.opencc:3000` on TTRSS plugin setting page
         image: wangqiru/opencc-api-server:latest
         container_name: opencc
         environment:
             - NODE_ENV=production
-        networks:
-            - service_only
+        expose:
+             - 3000
         restart: always
     database.postgres:
-        image: postgres:13-alpine
+        image: sameersbn/postgresql:latest
         container_name: postgres
         environment:
             - POSTGRES_PASSWORD=0.161307240sama # feel free to change the password
+            - DB_EXTENSION=pg_trgm
         volumes:
-            - ~/postgres/data/:/var/lib/postgresql/data # persist postgres data to ~/postgres/data/ on the host
-        networks:
-            - database_only
+            - ~/postgres/data/:/var/lib/postgresql # persist postgres data to ~/postgres/data/ on the host
         restart: always
 
 volumes:
     redis-data:
     feed-icons:
-networks:
-    public_access: # Provide the access for ttrss UI
-    service_only: # Provide the communication network between services only
-        internal: true
-    database_only: # Provide the communication between ttrss and database only
-        internal: true
+
+
+
